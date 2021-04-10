@@ -1,0 +1,19 @@
+services:
+  ahmedkhd.sylius_paymob_plugin.gateway_factory:
+    class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
+    arguments: [ Ahmedkhd\SyliusPaymobPlugin\Payum\SyliusPaymentGatewayFactory ]
+    tags:
+      - { name: payum.gateway_factory_builder, factory: sylius_payment }
+
+  ahmedkhd.sylius_paymob_plugin.form.type.gateway_configuration:
+    class: Ahmedkhd\SyliusPaymobPlugin\Form\Type\SyliusGatewayConfigurationType
+    tags:
+      - { name: sylius.gateway_configuration_type, type: paymob, label: "Paymob Payment" }
+      - { name: form.type }
+
+  ahmedkhd.sylius_paymob_plugin.payfort_action:
+    class: Ahmedkhd\SyliusPaymobPlugin\Action\CaptureAction
+    public: true
+    arguments: ['@sylius.http_client']
+    tags:
+      - { name: payum.action, factory: paymob, alias: payum.action.capture }

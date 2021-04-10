@@ -1,0 +1,4 @@
+suites:
+    main:
+        namespace: Ahmedkhd\SyliusPaymobPlugin
+        psr4_prefix: Ahmedkhd\SyliusPaymobPlugin
