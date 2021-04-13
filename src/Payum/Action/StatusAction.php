@@ -17,20 +17,20 @@ final class StatusAction implements ActionInterface
 
         /** @var SyliusPaymentInterface $payment */
         $payment = $request->getFirstModel();
-dd($payment);
+
         $details = $payment->getDetails();
 
-//        if (200 === $details['status']) {
-//            $request->markCaptured();
-//
-//            return;
-//        }
-//
-//        if (400 === $details['status']) {
-//            $request->markFailed();
-//
-//            return;
-//        }
+        if (200 === $details['status']) {
+            $request->markCaptured();
+
+            return;
+        }
+
+        if (400 === $details['status']) {
+            $request->markFailed();
+
+            return;
+        }
     }
 
     public function supports($request): bool

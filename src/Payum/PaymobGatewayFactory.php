@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Ahmedkhd\SyliusPaymobPlugin\Payum;
 
+use Ahmedkhd\SyliusPaymobPlugin\Payum\Action\CaptureAction;
 use Ahmedkhd\SyliusPaymobPlugin\Payum\Action\StatusAction;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayFactory;
 
-final class SyliusPaymentGatewayFactory extends GatewayFactory
+final class PaymobGatewayFactory extends GatewayFactory
 {
     protected function populateConfig(ArrayObject $config): void
     {
