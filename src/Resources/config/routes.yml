@@ -1,0 +1,5 @@
+ahmedkhd_sylius_paymob_plugin_notify_url:
+  path: /payment/paymob/capture
+  methods: [GET, POST]
+  defaults:
+    _controller: Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:doAction
