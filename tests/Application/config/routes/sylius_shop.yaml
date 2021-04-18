@@ -12,3 +12,6 @@ sylius_shop_default_locale:
     methods: [GET]
     defaults:
         _controller: sylius.controller.shop.locale_switch:switchAction
+
+ahmedkhd_sylius_paymob_plugin_notify_url:
+    resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/routes.yml"

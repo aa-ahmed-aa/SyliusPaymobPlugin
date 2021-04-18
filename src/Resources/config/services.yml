@@ -15,3 +15,10 @@ services:
     arguments: [ "@sylius.http_client" ]
     tags:
       - { name: payum.action, factory: paymob, alias: payum.action.capture }
+
+  Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:
+    public: true
+    autowire: true
+    arguments:
+      - '@sylius.repository.payment'
+      - '@payum'

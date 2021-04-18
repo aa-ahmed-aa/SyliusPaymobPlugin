@@ -74,4 +74,11 @@ final class SyliusApi
     {
         return $this->integrationId;
     }
+
+    public function doPayment($iframeURL)
+    {
+        header("location: {$iframeURL}");
+        exit;
+    }
+
 }

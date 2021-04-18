@@ -10,6 +10,7 @@ use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Exception\UnsupportedApiException;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentInterface as SyliusPaymentInterface;
 use Payum\Core\Request\Capture;
 use Ahmedkhd\SyliusPaymobPlugin\Payum\SyliusApi;
@@ -47,13 +48,11 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
             $paymentToken = $this->getPaymentKey($payment, $authToken, strval($orderId));
             $iframeURL = "https://accept.paymobsolutions.com/api/acceptance/iframes/{$this->api->getIframe()}?payment_token={$paymentToken}";
         } catch (RequestException $exception) {
-            $responseError = $exception->getResponse();
-            $payment->setDetails(['status' => 400, 'message' => \GuzzleHttp\json_encode($responseError->getBody()->getContents())]); // mark as failed
+            $payment->setState(PaymentInterface::STATE_FAILED);
             return;
         }
 
-        header("location: {$iframeURL}");
-        $payment->setDetails(['status' => 200, 'message' => 'done']); // mark as success
+        $this->api->doPayment($iframeURL);
     }
 
     public function supports($request): bool
@@ -110,7 +109,21 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
                     'amount_cents' => intval($payment->getAmount()*100),
                     'currency' => "EGP",
                     'merchant_id' => $this->api->getMerchantId(),
-                    'merchant_order_id' => $payment->getId()
+                    'merchant_order_id' => $payment->getId(),
+                    "shipping_data"=> [
+                        "apartment"=> "NA",
+                        'email'  => $payment->getOrder()->getCustomer()->getEmail() ?? "NA",
+                        'phone_number'  => $payment->getOrder()->getCustomer()->getPhoneNumber() ?? "NA",
+                        "floor"=> "NA",
+                        'first_name' => $payment->getOrder()->getCustomer()->getFirstName() ?? "NA",
+                        'last_name'  => $payment->getOrder()->getCustomer()->getLastName() ?? "NA",
+                        $payment->getOrder()->getBillingAddress()->getStreet() ?? "NA",
+                        "building"=> "NA",
+                        'postal_code'  => $payment->getOrder()->getBillingAddress()->getPostcode() ?? "NA",
+                        'city'  => $payment->getOrder()->getBillingAddress()->getCity() ?? "NA",
+                        'country'  => $payment->getOrder()->getBillingAddress()->getCountryCode() ?? "NA",
+                        'state'  => $payment->getOrder()->getBillingAddress()->getProvinceName() ?? "NA",
+                    ]
                 ])
             ])
         )->getBody()->getContents();
@@ -143,7 +156,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
                         'last_name'  => $payment->getOrder()->getCustomer()->getLastName() ?? "NA",
                         'email'  => $payment->getOrder()->getCustomer()->getEmail() ?? "NA",
                         'phone_number'  => $payment->getOrder()->getCustomer()->getPhoneNumber() ?? "NA",
-                        'apartment'  => "Na",
+                        'apartment'  => "NA",
                         'floor'  => 'NA',
                         'street'  => $payment->getOrder()->getBillingAddress()->getStreet() ?? "NA",
                         'building'  => 'NA',
