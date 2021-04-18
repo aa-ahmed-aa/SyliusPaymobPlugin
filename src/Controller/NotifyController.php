@@ -36,25 +36,6 @@ class NotifyController extends AbstractController
         if(
             $request->isMethod('GET') &&
             !empty($_GET_PARAMS) &&
-            $_GET_PARAMS['success'] == 'false'
-        ){
-            //fail this and assign new payment
-            $payment = $this->getPaymentById($_GET_PARAMS['merchant_order_id']);
-
-            $newPayment = clone $payment;
-            $newPayment->setState(PaymentInterface::STATE_NEW);
-            $payment->getOrder()->addPayment($newPayment);
-
-            $order = $this->setPaymentState($payment,
-                PaymentInterface::STATE_FAILED,
-                OrderPaymentStates::STATE_AWAITING_PAYMENT
-                );
-            return $this->redirectToRoute('sylius_shop_order_show',['tokenValue' => $order->getTokenValue()]);
-        }
-
-        if(
-            $request->isMethod('GET') &&
-            !empty($_GET_PARAMS) &&
             $_GET_PARAMS['success'] == 'true'
         ) {
             $payment = $this->getPaymentById($_GET_PARAMS['merchant_order_id']);
@@ -65,7 +46,18 @@ class NotifyController extends AbstractController
             return $this->redirectToRoute('sylius_shop_order_thank_you');
         }
 
-        throw new NotFoundHttpException();
+        //fail this and assign new payment
+        $payment = $this->getPaymentById($_GET_PARAMS['merchant_order_id']);
+
+        $newPayment = clone $payment;
+        $newPayment->setState(PaymentInterface::STATE_NEW);
+        $payment->getOrder()->addPayment($newPayment);
+
+        $order = $this->setPaymentState($payment,
+            PaymentInterface::STATE_FAILED,
+            OrderPaymentStates::STATE_AWAITING_PAYMENT
+        );
+        return $this->redirectToRoute('sylius_shop_order_show',['tokenValue' => $order->getTokenValue()]);
     }
 
     private function setPaymentState($payment, $paymentState, $orderPaymentState)
