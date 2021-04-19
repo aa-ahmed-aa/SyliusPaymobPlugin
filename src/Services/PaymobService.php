@@ -13,6 +13,8 @@ final class PaymobService extends AbstractService implements PaymobServiceInterf
 {
     protected $paymentRepository;
 
+    public const TRANSACTION_TYPE = "TRANSACTION";
+
     public function __construct(ContainerInterface $container, EntityRepository $paymentRepository)
     {
         parent::__construct($container);
@@ -46,7 +48,7 @@ final class PaymobService extends AbstractService implements PaymobServiceInterf
     public function getPaymentById($payment_id): PaymentInterface
     {
         /**@var $payment PaymentInterface|null */
-        $payment = $this->paymentRepository->find($payment_id);
+        $payment = $this->paymentRepository->find($payment_id)->getOrder()->getLastPayment();
         if (null === $payment OR $payment->getState() !== PaymentInterface::STATE_NEW) {
             throw new NotFoundHttpException('Order not have available payment');
         }

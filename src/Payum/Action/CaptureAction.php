@@ -107,7 +107,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
                 'body' => \GuzzleHttp\json_encode([
                     'auth_token' => $token,
                     'delivery_needed' => 'false',
-                    'amount_cents' => intval($payment->getAmount()*100),
+                    'amount_cents' => intval($payment->getOrder()->getTotal()),
                     'currency' => "EGP",
                     'merchant_id' => $this->api->getMerchantId(),
                     'merchant_order_id' => $payment->getId(),
@@ -146,7 +146,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
             $this->getBodyWithHeader([
                 'body' => \GuzzleHttp\json_encode([
                     'auth_token' => $token,
-                    'amount_cents' => intval($payment->getAmount()*100),
+                    'amount_cents' => intval($payment->getOrder()->getTotal()),
                     'expiration' => '3600',
                     'order_id' => $orderId,
                     'currency' => "EGP",
