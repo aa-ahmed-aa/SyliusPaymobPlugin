@@ -39,8 +39,8 @@ imports:
 
 ### On Paymob
 under `payment integrations` tab click edit on you environment and add these urls
-#####Transaction processed callback
+##### Transaction processed callback
 https://{domain_name}/payment/paymob/webhook
 
-#####Transaction response callback
+##### Transaction response callback
 https://{domain_name}/payment/paymob/capture
