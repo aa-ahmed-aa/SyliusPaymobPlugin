@@ -3,43 +3,39 @@
 
 namespace Ahmedkhd\SyliusPaymobPlugin\Controller;
 
-use Sylius\Component\Core\Model\OrderInterface;
+use Ahmedkhd\SyliusPaymobPlugin\Services\PaymobServiceInterface;
 use Sylius\Component\Core\OrderPaymentStates;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Payum\Core\Payum;
-use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class NotifyController extends AbstractController
 {
-    /** @var EntityRepository */
-    private $paymentRepository;
-
     /** @var Payum */
     private $payum;
 
+    /** @var PaymobServiceInterface */
+    private $paymobService;
+
     public function __construct(
-        EntityRepository $paymentRepository,
-        Payum $payum
+        Payum $payum,
+        PaymobServiceInterface $paymobService
     ) {
-        $this->paymentRepository = $paymentRepository;
         $this->payum = $payum;
+        $this->paymobService = $paymobService;
     }
 
     public function doAction(Request $request): Response
     {
         $_GET_PARAMS = $request->query->all();
 
-        if(
-            $request->isMethod('GET') &&
-            !empty($_GET_PARAMS) &&
+        if(!empty($_GET_PARAMS) &&
             $_GET_PARAMS['success'] == 'true'
         ) {
-            $payment = $this->getPaymentById($_GET_PARAMS['merchant_order_id']);
-            $order = $this->setPaymentState($payment,
+            $payment = $this->paymobService->getPaymentById($_GET_PARAMS['merchant_order_id']);
+            $order = $this->paymobService->setPaymentState($payment,
                 PaymentInterface::STATE_COMPLETED,
                 OrderPaymentStates::STATE_PAID
             );
@@ -47,49 +43,21 @@ class NotifyController extends AbstractController
         }
 
         //fail this and assign new payment
-        $payment = $this->getPaymentById($_GET_PARAMS['merchant_order_id']);
+        $payment = $this->paymobService->getPaymentById($_GET_PARAMS['merchant_order_id']);
 
         $newPayment = clone $payment;
         $newPayment->setState(PaymentInterface::STATE_NEW);
         $payment->getOrder()->addPayment($newPayment);
 
-        $order = $this->setPaymentState($payment,
+        $order = $this->paymobService->setPaymentState($payment,
             PaymentInterface::STATE_FAILED,
             OrderPaymentStates::STATE_AWAITING_PAYMENT
         );
         return $this->redirectToRoute('sylius_shop_order_show',['tokenValue' => $order->getTokenValue()]);
     }
 
-    private function setPaymentState($payment, $paymentState, $orderPaymentState)
+    public function webhookAction(Request $request): Response
     {
-        /** @var OrderInterface $order */
-        $order = $payment->getOrder();
-
-        $payment->setState($paymentState);
-        $order->setPaymentState($orderPaymentState);
-        $this->flushPaymentAndOrder($payment, $order);
-
-        return $order;
-    }
-
-    public function flushPaymentAndOrder($payment, $order)
-    {
-        $em = $this->get('doctrine.orm.default_entity_manager');
-        $em->persist($payment);
-        $em->persist($order);
-        $em->flush();
-    }
-    /**
-     * @param $payment_id
-     * @return PaymentInterface
-     */
-    private function getPaymentById($payment_id): PaymentInterface
-    {
-        /**@var $payment PaymentInterface|null */
-        $payment = $this->paymentRepository->find($payment_id);
-        if (null === $payment OR $payment->getState() !== PaymentInterface::STATE_NEW) {
-            throw new NotFoundHttpException('Order not have available payment');
-        }
-        return $payment;
+        return new Response(json_decode($request->getContent()), 200);
     }
 }

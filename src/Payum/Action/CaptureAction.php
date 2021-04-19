@@ -48,6 +48,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
             $paymentToken = $this->getPaymentKey($payment, $authToken, strval($orderId));
             $iframeURL = "https://accept.paymobsolutions.com/api/acceptance/iframes/{$this->api->getIframe()}?payment_token={$paymentToken}";
         } catch (RequestException $exception) {
+            $payment->setDetails(['status'=> "failed", "message" => $exception->getMessage()]);
             $payment->setState(PaymentInterface::STATE_FAILED);
             return;
         }
