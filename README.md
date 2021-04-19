@@ -22,14 +22,14 @@ return [
 ];
 ```
 
-Add routing to your config/routes/sylius_shop.yaml
+Add routing to your `config/routes/sylius_shop.yaml`
 
 ```yaml
 ahmedkhd_sylius_paymob_plugin_notify_url:
     resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/routes.yml"
 ```
 
-Add config to your config/packages/_sylius.yaml
+Add config to your `config/packages/_sylius.yaml`
 
 ```yml
 imports:
@@ -37,5 +37,10 @@ imports:
     - { resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/config.yml" }
 ```
 
-Return url is :
+### On Paymob
+under `payment integrations` tab click edit on you environment and add these urls
+#####Transaction processed callback
+https://{domain_name}/payment/paymob/webhook
+
+#####Transaction response callback
 https://{domain_name}/payment/paymob/capture

@@ -48,6 +48,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
             $paymentToken = $this->getPaymentKey($payment, $authToken, strval($orderId));
             $iframeURL = "https://accept.paymobsolutions.com/api/acceptance/iframes/{$this->api->getIframe()}?payment_token={$paymentToken}";
         } catch (RequestException $exception) {
+            $payment->setDetails(['status'=> "failed", "message" => $exception->getMessage()]);
             $payment->setState(PaymentInterface::STATE_FAILED);
             return;
         }
@@ -106,7 +107,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
                 'body' => \GuzzleHttp\json_encode([
                     'auth_token' => $token,
                     'delivery_needed' => 'false',
-                    'amount_cents' => intval($payment->getAmount()*100),
+                    'amount_cents' => intval($payment->getOrder()->getTotal()),
                     'currency' => "EGP",
                     'merchant_id' => $this->api->getMerchantId(),
                     'merchant_order_id' => $payment->getId(),
@@ -145,7 +146,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface
             $this->getBodyWithHeader([
                 'body' => \GuzzleHttp\json_encode([
                     'auth_token' => $token,
-                    'amount_cents' => intval($payment->getAmount()*100),
+                    'amount_cents' => intval($payment->getOrder()->getTotal()),
                     'expiration' => '3600',
                     'order_id' => $orderId,
                     'currency' => "EGP",
