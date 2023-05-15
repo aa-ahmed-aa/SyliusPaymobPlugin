@@ -4,9 +4,15 @@
     </a>
 </p>
 
-<h1 align="center">Plugin Skeleton</h1>
+<h1 align="center">Sylius Paymob Plugin</h1>
 
-<p align="center">Skeleton for starting Sylius plugins.</p>
+<p align="center">Sylius plugin for payment gateway Paymob operating in Egypt.</p>
+
+
+### !!!! :warning: Sylius Version Support
+
+- `master` branch supports sylius version 1.8 & 1.9
+- `1.12` branch supports sylius version 1.12
 
 ## Documentation
 
