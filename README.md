@@ -23,7 +23,7 @@ composer require aa-ahmed-aa/sylius-paymob-plugin
 ```
 
 
-Add plugin dependencies to your config/bundles.php file:
+Make sure the plugin registered in `config/bundles.php` file:
 
 ```php
 return [
@@ -44,7 +44,7 @@ Add config to your `config/packages/_sylius.yaml`
 ```yml
 imports:
  ...
-    - { resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/config.yml" }
+    - { resource: "@AhmedkhdSyliusPaymobPlugin/config/config.yml" }
 ```
 
 ### On Paymob
