@@ -14,11 +14,6 @@
 - `master` branch supports sylius version 1.8 & 1.9
 - `1.12` branch supports sylius version 1.12
 
-## Documentation
-
-For a comprehensive guide on Sylius Plugins development please go to Sylius documentation,
-there you will find the <a href="https://docs.sylius.com/en/latest/plugin-development-guide/index.html">Plugin Development Guide</a>, that is full of examples.
-
 ## Quickstart Installation
 
 ## Installation
@@ -56,3 +51,7 @@ imports:
 under `payment integrations` tab click edit on you environment and add these urls
 ##### Transaction processed callback
 https://{domain_name}/payment/paymob/webhook
+
+
+### Develop this plugin
+check [development guide](https://github.com/aa-ahmed-aa/SyliusPaymobPlugin/blob/1.12/Development.md)
