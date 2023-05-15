@@ -1,0 +1,9 @@
+ahmedkhd_sylius_paymob_shop:
+    resource: "@AhmedkhdSyliusPaymobPlugin/config/shop_routing.yml"
+    prefix: /{_locale}
+    requirements:
+        _locale: ^[a-z]{2}(?:_[A-Z]{2})?$
+
+ahmedkhd_sylius_paymob_admin:
+    resource: "@AhmedkhdSyliusPaymobPlugin/config/admin_routing.yml"
+    prefix: /admin

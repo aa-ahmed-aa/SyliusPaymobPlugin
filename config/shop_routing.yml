@@ -1,0 +1,12 @@
+# Delete these routes and define your own shop routes here
+ahmedkhd_sylius_paymob_plugin_notify_url:
+    path: /payment/paymob/capture
+    methods: [GET]
+    defaults:
+        _controller: Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:doAction
+
+ahmedkhd_sylius_paymob_plugin_notify_url_webhook:
+    path: /payment/paymob/webhook
+    methods: [POST]
+    defaults:
+        _controller: Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:webhookAction

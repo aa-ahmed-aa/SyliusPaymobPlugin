@@ -1,0 +1,2 @@
+imports:
+    - { resource: "@AhmedkhdSyliusPaymobPlugin/config/services.yml" }

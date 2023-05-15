@@ -1,0 +1,37 @@
+services:
+    ahmedkhd.sylius_paymob_plugin.paymob:
+        class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
+        arguments: [Ahmedkhd\SyliusPaymobPlugin\Payum\PaymobGatewayFactory]
+        tags:
+            - { name: payum.gateway_factory_builder, factory: paymob }
+    
+    Ahmedkhd\SyliusPaymobPlugin\Form\Type\SyliusGatewayConfigurationType:
+        tags:
+            - { name: sylius.gateway_configuration_type, type: paymob, label: "Paymob Payment" }
+            - { name: form.type }
+    
+    Ahmedkhd\SyliusPaymobPlugin\Payum\Action\CaptureAction:
+        public: true
+        arguments: [ "@sylius.http_client" ]
+        tags:
+            - { name: payum.action, factory: paymob, alias: payum.action.capture }
+    
+    ahmedkhd.sylius_paymob_plugin.service.paymob:
+        class: Ahmedkhd\SyliusPaymobPlugin\Services\PaymobService
+        public: true
+        arguments:
+            - '@service_container'
+            - '@sylius.repository.payment'
+    
+    Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:
+        public: true
+        autowire: true
+        arguments:
+            - '@payum'
+            - '@ahmedkhd.sylius_paymob_plugin.service.paymob'
+
+#      - '@router'
+#      - '@be_happy_rights_management.repository.right'
+#    calls:
+#      - { method: initializeArrayRouter, arguments: [] }
+#      - { method: setContainer, arguments: [ '@service_container' ] }
