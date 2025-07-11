@@ -25,10 +25,10 @@ services:
     
     Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:
         public: true
-        autowire: true
         arguments:
             - '@payum'
             - '@ahmedkhd.sylius_paymob_plugin.service.paymob'
+            - '@router'
 
 #      - '@router'
 #      - '@be_happy_rights_management.repository.right'

@@ -21,6 +21,7 @@ final class AhmedkhdSyliusPaymobExtension extends AbstractResourceExtension impl
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
 
         $loader->load('services.yml');
+        $loader->load('shop_routing.yml');
     }
 
     public function prepend(ContainerBuilder $container): void

@@ -6,13 +6,13 @@ namespace Ahmedkhd\SyliusPaymobPlugin\Controller;
 use Ahmedkhd\SyliusPaymobPlugin\Services\PaymobService;
 use Ahmedkhd\SyliusPaymobPlugin\Services\PaymobServiceInterface;
 use Sylius\Component\Core\OrderPaymentStates;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\RouterInterface;
 use Payum\Core\Payum;
 use Sylius\Component\Core\Model\PaymentInterface;
 
-class NotifyController extends AbstractController
+class NotifyController
 {
     /** @var Payum */
     private $payum;
@@ -20,12 +20,17 @@ class NotifyController extends AbstractController
     /** @var PaymobServiceInterface */
     private $paymobService;
 
+    /** @var RouterInterface */
+    private $router;
+
     public function __construct(
         Payum $payum,
-        PaymobServiceInterface $paymobService
+        PaymobServiceInterface $paymobService,
+        RouterInterface $router
     ) {
         $this->payum = $payum;
         $this->paymobService = $paymobService;
+        $this->router = $router;
     }
 
     public function doAction(Request $request): Response
@@ -33,16 +38,16 @@ class NotifyController extends AbstractController
         $_GET_PARAMS = $request->query->all();
 
         if(!empty($_GET_PARAMS) && $_GET_PARAMS['success'] == 'true') {
-            return $this->redirectToRoute('sylius_shop_order_thank_you');
+            return new Response('', 302, ['Location' => $this->router->generate('sylius_shop_order_thank_you')]);
         }
 
         $order = $this->paymobService->getPaymentById($_GET_PARAMS['merchant_order_id'])->getOrder();
-        return $this->redirectToRoute('sylius_shop_order_show',['tokenValue' => $order->getTokenValue()]);
+        return new Response('', 302, ['Location' => $this->router->generate('sylius_shop_order_show', ['tokenValue' => $order->getTokenValue()])]);
     }
 
     public function webhookAction(Request $request): Response
     {
-        $paymobResponse = \GuzzleHttp\json_decode($request->getContent());
+        $paymobResponse = json_decode($request->getContent());
         $response = false;
 
         //success payment
@@ -83,6 +88,6 @@ class NotifyController extends AbstractController
             );
         }
 
-        return new Response(\GuzzleHttp\json_encode(['success' => $response]), $response ? 200 : 400);
+        return new Response(json_encode(['success' => $response]), $response ? 200 : 400);
     }
 }
