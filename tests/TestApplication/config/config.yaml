@@ -1,0 +1,10 @@
+imports:
+    - { resource: "@AhmedkhdSyliusPaymobPlugin/config/config.yaml" }
+    - { resource: "services_test.php" }
+
+twig:
+    paths:
+        '%kernel.project_dir%/../../../tests/TestApplication/templates': ~
+
+parameters:
+    your_plugin_param: '%kernel.project_dir%/../../../config/plugin_param/'
