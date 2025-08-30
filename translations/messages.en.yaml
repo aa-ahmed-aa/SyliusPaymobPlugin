@@ -1,0 +1,3 @@
+ahmedkhd_sylius_paymob_plugin:
+    gateway:
+        name: 'Paymob'

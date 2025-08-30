@@ -1,0 +1,25 @@
+{% set configForm = hookable_metadata.context.form.gatewayConfig.config %}
+
+<div class="row">
+
+    <div class="col-12 col-md-6">
+        {{ form_row(configForm.api_key, sylius_test_form_attribute('config-api-key')) }}
+    </div>
+
+    <div class="col-12 col-md-6">
+        {{ form_row(configForm.hmac_security, sylius_test_form_attribute('config-hmac_security')) }}
+    </div>
+
+    <div class="col-12 col-md-6">
+        {{ form_row(configForm.merchant_id, sylius_test_form_attribute('config-merchant_id')) }}
+    </div>
+
+    <div class="col-12 col-md-6">
+        {{ form_row(configForm.iframe_id, sylius_test_form_attribute('config-iframe_id')) }}
+    </div>
+
+    <div class="col-12 col-md-6">
+        {{ form_row(configForm.integration_id, sylius_test_form_attribute('config-integration_id')) }}
+    </div>
+    
+</div>

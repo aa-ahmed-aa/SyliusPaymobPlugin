@@ -1,0 +1,10 @@
+imports:
+    - { resource: 'services/*.yaml' }
+
+services:
+    Ahmedkhd\SyliusPaymobPlugin\Form\Type\GatewayConfigurationType:
+        tags:
+          - name: sylius.gateway_configuration_type
+            type: sylius_payment
+            label: ahmedkhd_sylius_paymob_plugin.gateway.name
+          - name: form.type
