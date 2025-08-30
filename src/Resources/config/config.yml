@@ -1,2 +1,13 @@
 imports:
   - { resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/services.yml" }
+
+sylius_payment:
+  gateways:
+    paymob:
+      name: Paymob
+      config:
+        api_key: ~
+        hamc_security: ~
+        merchant_id: ~
+        iframe: ~
+        integration_id: ~

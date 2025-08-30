@@ -1,21 +1,39 @@
 services:
-  ahmedkhd.sylius_paymob_plugin.paymob:
-    class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
-    arguments: [Ahmedkhd\SyliusPaymobPlugin\Payum\PaymobGatewayFactory]
+  # Gateway Factory
+  ahmedkhd.sylius_paymob_plugin.gateway_factory:
+    class: Ahmedkhd\SyliusPaymobPlugin\Factory\PaymobGatewayFactory
     tags:
-      - { name: payum.gateway_factory_builder, factory: paymob }
+      - { name: sylius.payment.gateway_factory, type: paymob }
 
+  # Gateway Configuration Type
   Ahmedkhd\SyliusPaymobPlugin\Form\Type\SyliusGatewayConfigurationType:
     tags:
       - { name: sylius.gateway_configuration_type, type: paymob, label: "Paymob Payment" }
       - { name: form.type }
 
-  Ahmedkhd\SyliusPaymobPlugin\Payum\Action\CaptureAction:
-    public: true
-    arguments: [ "@sylius.http_client" ]
+  # Payment Request Command Provider
+  ahmedkhd.sylius_paymob_plugin.provider.payment_request.command.capture:
+    class: Ahmedkhd\SyliusPaymobPlugin\Provider\CaptureCommandProvider
     tags:
-      - { name: payum.action, factory: paymob, alias: payum.action.capture }
+      - name: sylius.payment_request.provider.command
+        gateway_factory: paymob
+        action: capture
 
+  # Payment Request Command Handler
+  ahmedkhd.sylius_paymob_plugin.command_handler.capture:
+    class: Ahmedkhd\SyliusPaymobPlugin\CommandHandler\CapturePaymentCommandHandler
+    tags:
+      - { name: messenger.message_handler }
+
+  # Payment Request HTTP Response Provider
+  ahmedkhd.sylius_paymob_plugin.provider.payment_request.http_response.capture:
+    class: Ahmedkhd\SyliusPaymobPlugin\Provider\CaptureHttpResponseProvider
+    tags:
+      - name: sylius.payment_request.provider.http_response
+        gateway_factory: paymob
+        action: capture
+
+  # Paymob Service
   ahmedkhd.sylius_paymob_plugin.service.paymob:
     class: Ahmedkhd\SyliusPaymobPlugin\Services\PaymobService
     public: true
@@ -23,15 +41,9 @@ services:
       - '@service_container'
       - '@sylius.repository.payment'
 
+  # Notify Controller
   Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:
     public: true
     autowire: true
     arguments:
-      - '@payum'
       - '@ahmedkhd.sylius_paymob_plugin.service.paymob'
-
-#      - '@router'
-#      - '@be_happy_rights_management.repository.right'
-#    calls:
-#      - { method: initializeArrayRouter, arguments: [] }
-#      - { method: setContainer, arguments: [ '@service_container' ] }
