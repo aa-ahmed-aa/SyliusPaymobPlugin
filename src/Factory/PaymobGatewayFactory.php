@@ -4,21 +4,28 @@ declare(strict_types=1);
 
 namespace Ahmedkhd\SyliusPaymobPlugin\Factory;
 
+use Sylius\Component\Core\Model\PaymentMethodInterface;
+
 final class PaymobGatewayFactory
 {
-    public function create(mixed $paymentMethod): object
+    public function create(PaymentMethodInterface $paymentMethod): array
     {
-        // This will be implemented to create the gateway configuration
-        // For now, we'll return a basic object
-        return (object) [
+        return [
             'gateway_name' => 'paymob',
-            'config' => []
+            'factory_name' => 'paymob',
+            'config' => [
+                'api_key' => '',
+                'hamc_security' => '',
+                'merchant_id' => '',
+                'iframe' => '',
+                'integration_id' => ''
+            ]
         ];
     }
 
-    public function supports(mixed $paymentMethod): bool
+    public function supports(PaymentMethodInterface $paymentMethod): bool
     {
-        // This will be implemented to check if the payment method is supported
-        return true;
+        return $paymentMethod->getGatewayConfig() !== null && 
+               $paymentMethod->getGatewayConfig()->getFactoryName() === 'paymob';
     }
 }

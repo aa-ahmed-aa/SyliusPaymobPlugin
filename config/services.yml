@@ -1,11 +1,12 @@
 services:
-  # Gateway Factory
-  ahmedkhd.sylius_paymob_plugin.gateway_factory:
-    class: Ahmedkhd\SyliusPaymobPlugin\Factory\PaymobGatewayFactory
+  # Gateway Configuration Type
+  ahmedkhd.sylius_paymob_plugin.form.type.gateway_configuration.paymob:
+    class: Ahmedkhd\SyliusPaymobPlugin\Form\Type\SyliusGatewayConfigurationType
     tags:
-      - { name: sylius.payment.gateway_factory, type: paymob }
-
-
+      - name: sylius.gateway_configuration_type
+        type: paymob
+        label: "Paymob Payment"
+      - name: form.type
 
   # Actions Command Provider (Router)
   ahmedkhd.sylius_paymob_plugin.command_provider.paymob:

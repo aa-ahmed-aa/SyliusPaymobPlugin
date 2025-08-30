@@ -1,5 +1,5 @@
 imports:
-  - { resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/services.yml" }
+  - { resource: "services.yml" }
 
 sylius_payment:
   gateway_config:

@@ -6,23 +6,18 @@ namespace Ahmedkhd\SyliusPaymobPlugin\Provider;
 
 use Ahmedkhd\SyliusPaymobPlugin\PaymentRequest\CapturePaymentRequest;
 use Ahmedkhd\SyliusPaymobPlugin\Command\CapturePaymentCommand;
+use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface;
 
-final class CaptureCommandProvider
+final class CaptureCommandProvider implements PaymentRequestCommandProviderInterface
 {
-    public function supports(mixed $paymentRequest): bool
+    public function supports(PaymentRequestInterface $paymentRequest): bool
     {
-        return $paymentRequest instanceof CapturePaymentRequest;
+        return $paymentRequest->getAction() === PaymentRequestInterface::ACTION_CAPTURE;
     }
 
-    public function getCommand(mixed $paymentRequest): object
+    public function provide(PaymentRequestInterface $paymentRequest): object
     {
-        if (!$paymentRequest instanceof CapturePaymentRequest) {
-            throw new \InvalidArgumentException('Expected CapturePaymentRequest');
-        }
-
-        return new CapturePaymentCommand(
-            $paymentRequest->getPayment(),
-            $paymentRequest->getGatewayConfiguration()
-        );
+        return new CapturePaymentCommand($paymentRequest->getHash());
     }
 }

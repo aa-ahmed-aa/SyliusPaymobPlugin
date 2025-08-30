@@ -4,21 +4,12 @@ declare(strict_types=1);
 
 namespace Ahmedkhd\SyliusPaymobPlugin\Command;
 
-final class CapturePaymentCommand
+use Sylius\Bundle\PaymentBundle\Command\PaymentRequestHashAwareInterface;
+use Sylius\Bundle\PaymentBundle\Command\PaymentRequestHashAwareTrait;
+
+final class CapturePaymentCommand implements PaymentRequestHashAwareInterface
 {
-    public function __construct(
-        private readonly mixed $payment,
-        private readonly array $gatewayConfiguration
-    ) {
-    }
+    use PaymentRequestHashAwareTrait;
 
-    public function getPayment(): mixed
-    {
-        return $this->payment;
-    }
-
-    public function getGatewayConfiguration(): array
-    {
-        return $this->gatewayConfiguration;
-    }
+    public function __construct(protected ?string $hash) {}
 }

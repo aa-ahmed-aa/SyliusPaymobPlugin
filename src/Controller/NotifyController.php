@@ -9,22 +9,16 @@ use Sylius\Component\Core\OrderPaymentStates;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Payum\Core\Payum;
 use Sylius\Component\Core\Model\PaymentInterface;
 
 class NotifyController extends AbstractController
 {
-    /** @var Payum */
-    private $payum;
-
     /** @var PaymobServiceInterface */
     private $paymobService;
 
     public function __construct(
-        Payum $payum,
         PaymobServiceInterface $paymobService
     ) {
-        $this->payum = $payum;
         $this->paymobService = $paymobService;
     }
 
