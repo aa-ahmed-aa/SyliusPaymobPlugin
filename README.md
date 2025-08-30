@@ -26,7 +26,7 @@ Add routing to your `config/routes/sylius_shop.yaml`
 
 ```yaml
 ahmedkhd_sylius_paymob_plugin_notify_url:
-    resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/routes.yml"
+    resource: "@AhmedkhdSyliusPaymobPlugin/config/routes/shop.yaml"
 ```
 
 Add config to your `config/packages/_sylius.yaml`
@@ -34,7 +34,7 @@ Add config to your `config/packages/_sylius.yaml`
 ```yml
 imports:
  ...
-    - { resource: "@AhmedkhdSyliusPaymobPlugin/Resources/config/config.yml" }
+    - { resource: "@AhmedkhdSyliusPaymobPlugin/config/config.yaml" }
 ```
 
 ### On Paymob

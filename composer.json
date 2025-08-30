@@ -8,7 +8,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "sylius/sylius": "^2.1",
         "symfony/messenger": "^6.0|^7.0",
         "guzzlehttp/guzzle": "^7.0"
@@ -67,14 +67,19 @@
         ]
     },
     "scripts": {
-        "post-install-cmd": [
-            "php bin/create_node_symlink.php"
+        "database-reset": [
+            "vendor/bin/console doctrine:database:drop --force --if-exists",
+            "vendor/bin/console doctrine:database:create",
+            "vendor/bin/console doctrine:migration:migrate -n",
+            "vendor/bin/console sylius:fixtures:load -n"
         ],
-        "post-update-cmd": [
-            "php bin/create_node_symlink.php"
+        "frontend-clear": [
+            "cd vendor/sylius/test-application && yarn install && yarn build",
+            "vendor/bin/console assets:install"
         ],
-        "post-create-project-cmd": [
-            "php bin/create_node_symlink.php"
+        "test-app-init": [
+            "@database-reset",
+            "@frontend-clear"
         ]
     }
 }
