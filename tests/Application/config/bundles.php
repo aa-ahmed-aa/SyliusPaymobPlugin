@@ -4,7 +4,7 @@ return [
     Symfony\Bundle\FrameworkBundle\FrameworkBundle::class => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
     Symfony\Bundle\SecurityBundle\SecurityBundle::class => ['all' => true],
-    Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle::class => ['all' => true],
+    // Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
     Symfony\Bundle\TwigBundle\TwigBundle::class => ['all' => true],
     Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
     Sylius\Bundle\OrderBundle\SyliusOrderBundle::class => ['all' => true],
@@ -29,32 +29,32 @@ return [
     Sylius\Bundle\CoreBundle\SyliusCoreBundle::class => ['all' => true],
     Sylius\Bundle\ResourceBundle\SyliusResourceBundle::class => ['all' => true],
     Sylius\Bundle\GridBundle\SyliusGridBundle::class => ['all' => true],
-    winzou\Bundle\StateMachineBundle\winzouStateMachineBundle::class => ['all' => true],
-    Sonata\BlockBundle\SonataBlockBundle::class => ['all' => true],
-    Bazinga\Bundle\HateoasBundle\BazingaHateoasBundle::class => ['all' => true],
-    JMS\SerializerBundle\JMSSerializerBundle::class => ['all' => true],
-    FOS\RestBundle\FOSRestBundle::class => ['all' => true],
-    Knp\Bundle\GaufretteBundle\KnpGaufretteBundle::class => ['all' => true],
-    Knp\Bundle\MenuBundle\KnpMenuBundle::class => ['all' => true],
-    Liip\ImagineBundle\LiipImagineBundle::class => ['all' => true],
-    Payum\Bundle\PayumBundle\PayumBundle::class => ['all' => true],
-    Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle::class => ['all' => true],
+    // winzou\Bundle\StateMachineBundle\winzouStateMachineBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Sonata\BlockBundle\SonataBlockBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Bazinga\Bundle\HateoasBundle\BazingaHateoasBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // JMS\SerializerBundle\JMSSerializerBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // FOS\RestBundle\FOSRestBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Knp\Bundle\GaufretteBundle\KnpGaufretteBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Knp\Bundle\MenuBundle\KnpMenuBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Liip\ImagineBundle\LiipImagineBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Payum\Bundle\PayumBundle\PayumBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
     Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle::class => ['all' => true],
     Sylius\Bundle\FixturesBundle\SyliusFixturesBundle::class => ['all' => true],
-    Sylius\Bundle\PayumBundle\SyliusPayumBundle::class => ['all' => true],
+    // Sylius\Bundle\PayumBundle\SyliusPayumBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
     Sylius\Bundle\ThemeBundle\SyliusThemeBundle::class => ['all' => true],
     Sylius\Bundle\AdminBundle\SyliusAdminBundle::class => ['all' => true],
     Sylius\Bundle\ShopBundle\SyliusShopBundle::class => ['all' => true],
-    FOS\OAuthServerBundle\FOSOAuthServerBundle::class => ['all' => true],
-    Sylius\Bundle\AdminApiBundle\SyliusAdminApiBundle::class => ['all' => true],
+    // FOS\OAuthServerBundle\FOSOAuthServerBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Sylius\Bundle\AdminApiBundle\SyliusAdminApiBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
     Ahmedkhd\SyliusPaymobPlugin\AhmedkhdSyliusPaymobPlugin::class => ['all' => true],
     Symfony\Bundle\DebugBundle\DebugBundle::class => ['dev' => true, 'test' => true, 'test_cached' => true],
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true, 'test_cached' => true],
     FriendsOfBehat\SymfonyExtension\Bundle\FriendsOfBehatSymfonyExtensionBundle::class => ['test' => true, 'test_cached' => true],
     Sylius\Behat\Application\SyliusTestPlugin\SyliusTestPlugin::class => ['test' => true, 'test_cached' => true],
-    ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle::class => ['all' => true],
-    Lexik\Bundle\JWTAuthenticationBundle\LexikJWTAuthenticationBundle::class => ['all' => true],
-    Sylius\Bundle\ApiBundle\SyliusApiBundle::class => ['all' => true],
+    // ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Lexik\Bundle\JWTAuthenticationBundle\LexikJWTAuthenticationBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
+    // Sylius\Bundle\ApiBundle\SyliusApiBundle::class => ['all' => true], // Commented out - not available in Sylius 2.1
     SyliusLabs\DoctrineMigrationsExtraBundle\SyliusLabsDoctrineMigrationsExtraBundle::class => ['all' => true],
     Symplify\ConsoleColorDiff\ConsoleColorDiffBundle::class => ['dev' => true, 'test' => true],
 ];

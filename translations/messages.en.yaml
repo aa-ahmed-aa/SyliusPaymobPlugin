@@ -1,0 +1,4 @@
+ahmedkhd_sylius_paymob_plugin:
+    gateway:
+        name: 'Paymob'
+        webhook_guidlines: 'Use this as the webhook URL on the payment integration on Paymob:'

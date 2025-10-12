@@ -1,0 +1,4 @@
+ahmedkhd_sylius_paymob_plugin:
+    gateway:
+        name: 'Paymob'
+        webhook_guidlines: 'استخدم هذا كعنوان الويب Webhook URL في تكامل الدفع على Paymob:'
