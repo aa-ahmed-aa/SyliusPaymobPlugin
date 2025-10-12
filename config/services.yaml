@@ -1,6 +1,3 @@
-imports:
-    - { resource: 'services/*.yaml' }
-
 services:
     Ahmedkhd\SyliusPaymobPlugin\Form\Type\GatewayConfigurationType:
         tags:
@@ -80,14 +77,6 @@ services:
     
     ahmedkhd.sylius_paymob_plugin.service.official_paymob:
         class: Ahmedkhd\SyliusPaymobPlugin\Service\OfficialPaymobService
-
-    Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController:
-        public: true
-        arguments:
-            - '@ahmedkhd.sylius_paymob_plugin.service.paymob'
-            - '@router'
-        tags:
-            - name: controller.service_arguments
     
     ahmedkhd.sylius_paymob_plugin.provider.order_pay.http_response.paymob:
         class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
