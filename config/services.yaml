@@ -18,7 +18,7 @@ services:
                 index_by: 'action'
         tags:
             - name: sylius.payment_request.command_provider
-              gateway_factory: 'paymob'
+              gateway_factory: !php/const Ahmedkhd\SyliusPaymobPlugin\Service\PaymobServiceInterface::GATEWAY_NAME
 
     ahmedkhd.sylius_paymob_plugin.command_provider.payment_request.paymob.capture:
         class: Ahmedkhd\SyliusPaymobPlugin\CommandProvider\CapturePaymentRequestCommandProvider
@@ -49,6 +49,8 @@ services:
             - '@sylius.provider.payment_request'
             - '@sylius_abstraction.state_machine'
             - '@sylius.repository.payment_request'
+            - '@sylius.repository.order'
+            - '@sylius.repository.customer'
         tags:
             - name: messenger.message_handler
 
@@ -95,7 +97,7 @@ services:
                 index_by: action
         tags:
             - name: sylius.payment_request.provider.http_response
-              gateway_factory: 'paymob'
+              gateway_factory: !php/const Ahmedkhd\SyliusPaymobPlugin\Service\PaymobServiceInterface::GATEWAY_NAME
 
     ahmedkhd.sylius_paymob_plugin.provider.order_pay.http_response.paymob.capture:
         class: Ahmedkhd\SyliusPaymobPlugin\ResponseProvider\CapturePaymentResponseProvider

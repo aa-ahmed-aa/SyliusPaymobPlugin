@@ -8,20 +8,14 @@ use GuzzleHttp\Client as GuzzleClient;
 use Payum\Core\Exception\UnsupportedApiException;
 use Sylius\Component\Core\Model\PaymentInterface as SyliusPaymentInterface;
 use Sylius\Component\Core\Repository\CustomerRepositoryInterface;
-use Ahmedkhd\SyliusPaymobPlugin\Model\PaymobInterface;
-use Ahmedkhd\SyliusPaymobPlugin\Model\Paymob;
 use Ahmedkhd\SyliusPaymobPlugin\Service\PaymobServiceInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface as SyliusPaymentRequestInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 
-
 final class PaymobService implements PaymobServiceInterface
 {
-    /** @var PaymobInterface */
-    public PaymobInterface $paymobConfig;
-
     /** @var GuzzleClient */
     public GuzzleClient $client;
 
@@ -30,43 +24,26 @@ final class PaymobService implements PaymobServiceInterface
         private CustomerRepositoryInterface $customerRepository,
         private RouterInterface $router,
     ) {
+        $this->orderRepository = $orderRepository;
+        $this->customerRepository = $customerRepository;
+        $this->router = $router;
         $this->client = new GuzzleClient([
             'base_uri' => 'https://accept.paymobsolutions.com',
             'headers' => PaymobServiceInterface::HEADERS
         ]);
     }
-    
-    public function setPaymobConfig(PaymobInterface $paymobConfig): void
-    {
-        $this->paymobConfig = new Paymob(
-            $paymobConfig->getApiKey(),
-            $paymobConfig->getHmacSecurity(),
-            $paymobConfig->getMerchantId(),
-            $paymobConfig->getIframe(),
-            $paymobConfig->getIntegrationId()
-        );
-    }
 
-    public function getPaymobConfig(): ?PaymobInterface
+    public function authenticate(SyliusPaymentRequestInterface $paymentRequest): string
     {
-        return $this->paymobConfig;
-    }
+        $paymentConfig = $paymentRequest->getMethod()->getGatewayConfig()->getConfig();
 
-    /**
-     * Get the Authentication Token from Paymob
-     *
-     * @return string
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function authenticate(): string
-    {
         if ($this->client === null) {
             throw new UnsupportedApiException('Client not set. Expected an instance of ' . GuzzleClient::class);
         }
 
         $response = $this->client->post('/api/auth/tokens', [
             'json' => [
-                'api_key' => $this->getPaymobConfig()->getApiKey()
+                'api_key' => $paymentConfig['api_key']
             ]
         ]);
 
@@ -75,35 +52,28 @@ final class PaymobService implements PaymobServiceInterface
         return json_decode($body)->token ?? '';
     }
 
-    /**
-     * Get the OrderId from Paymob
-     *
-     * @param SyliusPaymentInterface $payment
-     * @param string $token
-     * @return string
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
     public function createOrderId(SyliusPaymentRequestInterface $paymentRequest, string $token): string
     {
+        $paymentConfig = $paymentRequest->getMethod()->getGatewayConfig()->getConfig();
+
         if ($this->client === null) {
             throw new UnsupportedApiException('Client not set. Expected an instance of ' . GuzzleClient::class);
         }
 
-        // Find the order with all necessary associations loaded
-        $order = $this->orderRepository->findOneBy(["id" => $paymentRequest->getPayment()->getOrder()->getId()]);
+        $order = $paymentRequest->getPayment()->getOrder();
+
         // Get customer directly from customer repository - CREATE ORDER ID METHOD
         $customer = null;
         if ($order->getCustomer()) {
             $customer = $this->customerRepository->findOneBy(['id' => $order->getCustomer()->getId()]);
-            error_log("Customer found by ID: " . ($customer ? "yes" : "no"));
         }
         $billingAddress = $order->getBillingAddress();
 
         // Get customer data with fallbacks
-        $firstName = $customer && $customer->getFirstName() ? $customer->getFirstName() : "NA";
-        $lastName = $customer && $customer->getLastName() ? $customer->getLastName() : "NA";
+        $firstName = $customer && $customer->getFirstName() ? $customer->getFirstName() : $order->getBillingAddress()->getFirstName();
+        $lastName = $customer && $customer->getLastName() ? $customer->getLastName() : $order->getBillingAddress()->getLastName();
         $email = $customer && $customer->getEmail() ? $customer->getEmail() : "NA";
-        $phoneNumber = $customer && $customer->getPhoneNumber() ? $customer->getPhoneNumber() : "NA";
+        $phoneNumber = $customer && $customer->getPhoneNumber() ? $customer->getPhoneNumber() : $order->getBillingAddress()->getPhoneNumber();
 
         // Get billing address data with fallbacks
         $street = $billingAddress && $billingAddress->getStreet() ? $billingAddress->getStreet() : "NA";
@@ -111,13 +81,16 @@ final class PaymobService implements PaymobServiceInterface
         $city = $billingAddress && $billingAddress->getCity() ? $billingAddress->getCity() : "NA";
         $country = $billingAddress && $billingAddress->getCountryCode() ? $billingAddress->getCountryCode() : "NA";
         $state = $billingAddress && $billingAddress->getProvinceName() ? $billingAddress->getProvinceName() : "NA";
+        
+        $conversionRate = json_decode(file_get_contents("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/egp.json"), true);
+
         $response = $this->client->post('/api/ecommerce/orders', [
             'json' => [
                 'auth_token' => $token,
                 'delivery_needed' => 'false',
-                'amount_cents' => $order->getTotal(),
+                'amount_cents' => (string) floor($order->getCurrencyCode() === 'EGP' ? $order->getTotal() : ($order->getTotal() / $conversionRate["egp"][strtolower($order->getCurrencyCode())])),
                 'currency' => "EGP",
-                'merchant_id' => $this->getPaymobConfig()->getMerchantId(),
+                'merchant_id' => $paymentConfig['merchant_id'],
                 'merchant_order_id' => $order->getNumber(),
                 "shipping_data"=> [
                     "apartment"=> "NA",
@@ -152,13 +125,14 @@ final class PaymobService implements PaymobServiceInterface
      */
     public function getPaymentKey(SyliusPaymentRequestInterface $paymentRequest, string $token, string $paymobOrderId): string
     {
+        $paymentConfig = $paymentRequest->getMethod()->getGatewayConfig()->getConfig();
+
         if ($this->client === null) {
             throw new UnsupportedApiException('Client not set. Expected an instance of ' . GuzzleClient::class);
         }
 
-        // Find the order with all necessary associations loaded
-        $order = $this->orderRepository->findOneBy(["id" => $paymentRequest->getPayment()->getOrder()->getId()]);
-        
+        $order = $paymentRequest->getPayment()->getOrder();
+
         // Get customer directly from customer repository - GET PAYMENT KEY METHOD
         $customer = null;
         if ($order->getCustomer()) {
@@ -167,10 +141,10 @@ final class PaymobService implements PaymobServiceInterface
         $billingAddress = $order->getBillingAddress();
 
         // Get customer data with fallbacks
-        $firstName = $customer && $customer->getFirstName() ? $customer->getFirstName() : "NA";
-        $lastName = $customer && $customer->getLastName() ? $customer->getLastName() : "NA";
+        $firstName = $customer && $customer->getFirstName() ? $customer->getFirstName() : $order ->getBillingAddress()->getFirstName();
+        $lastName = $customer && $customer->getLastName() ? $customer->getLastName() : $order->getBillingAddress()->getLastName();
         $email = $customer && $customer->getEmail() ? $customer->getEmail() : "NA";
-        $phoneNumber = $customer && $customer->getPhoneNumber() ? $customer->getPhoneNumber() : "NA";
+        $phoneNumber = $customer && $customer->getPhoneNumber() ? $customer->getPhoneNumber() : $order->getBillingAddress()->getPhoneNumber();
 
         // Get billing address data with fallbacks
         $street = $billingAddress && $billingAddress->getStreet() ? $billingAddress->getStreet() : "NA";
@@ -189,15 +163,16 @@ final class PaymobService implements PaymobServiceInterface
             }
         }
         
+        $conversionRate = json_decode(file_get_contents("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/egp.json"), true);
         $response = $this->client->post('/api/acceptance/payment_keys', [
             'json' => [
                 'auth_token' => $token,
-                'amount_cents' => (string) $order->getTotal(),
+                'amount_cents' => (string) floor($order->getCurrencyCode() === 'EGP' ? $order->getTotal() : ($order->getTotal() / $conversionRate["egp"][strtolower($order->getCurrencyCode())])),
                 'expiration' => '3600',
                 'order_id' => $paymobOrderId,
                 'currency' => "EGP",
-                'merchant_id' => (string) $this->getPaymobConfig()->getMerchantId(),
-                'integration_id' => (string) $this->getPaymobConfig()->getIntegrationId(),
+                'merchant_id' => (string) $paymentConfig['merchant_id'],
+                'integration_id' => (string) $paymentConfig['integration_id'],
                 'redirection_url' => $this->router->generate(
                     'sylius_shop_order_after_pay',
                     ['hash' => $paymentRequest->getHash()->toBase58()],
@@ -205,7 +180,7 @@ final class PaymobService implements PaymobServiceInterface
                 ),
                 "notification_url" => $this->router->generate(
                     'sylius_payment_method_notify',
-                    ['code' => 'paymob'],
+                    ['code' => PaymobServiceInterface::GATEWAY_NAME],
                     UrlGeneratorInterface::ABSOLUTE_URL,
                 ),
                 'billing_data' => [

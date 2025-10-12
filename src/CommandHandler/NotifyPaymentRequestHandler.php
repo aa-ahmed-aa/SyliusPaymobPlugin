@@ -39,9 +39,9 @@ final readonly class NotifyPaymentRequestHandler
             $orderAmount = $paymobTransaction["order"]["paid_amount_cents"];
             $amount = $payment->getAmount();
             if($orderAmount === $amount) {
-                $payment->setDetails(['status'=> PaymentRequestTransitions::TRANSITION_COMPLETE, 'message' => "amount: {$amount}"]);
+                $payment->setDetails(['status'=> PaymentRequestTransitions::TRANSITION_COMPLETE, 'message' => "amount: {$amount}, currency: {$payment->getOrder()->getCurrencyCode()}"]);
                 $paymentRequest->setPayload($requestData);
-                $paymentRequest->setResponseData(['status'=> PaymentRequestTransitions::TRANSITION_COMPLETE, 'message' => "amount: {$amount}"]);
+                $paymentRequest->setResponseData(['status'=> PaymentRequestTransitions::TRANSITION_COMPLETE, 'message' => "amount: {$amount}, currency: {$payment->getOrder()->getCurrencyCode()}"]);
 
                 if ($this->stateMachine->can(
                     $paymentRequest,
@@ -70,9 +70,9 @@ final readonly class NotifyPaymentRequestHandler
         } else if ($paymobTransaction['success'] === false) {
             $orderAmount = $paymobTransaction["order"]["paid_amount_cents"];
 
-            $payment->setDetails(['status'=> PaymentRequestTransitions::TRANSITION_FAIL, 'message' => "amount: {$orderAmount}"]);
+            $payment->setDetails(['status'=> PaymentRequestTransitions::TRANSITION_FAIL, 'message' => "amount: {$orderAmount}, currency: {$payment->getOrder()->getCurrencyCode()}"]);
             $paymentRequest->setPayload($requestData);
-            $paymentRequest->setResponseData(['status'=> PaymentRequestTransitions::TRANSITION_FAIL, 'message' => "amount: {$orderAmount}"]);
+            $paymentRequest->setResponseData(['status'=> PaymentRequestTransitions::TRANSITION_FAIL, 'message' => "amount: {$orderAmount}, currency: {$payment->getOrder()->getCurrencyCode()}"]);
 
             if ($this->stateMachine->can(
                 $paymentRequest,
