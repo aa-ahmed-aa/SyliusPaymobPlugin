@@ -1,0 +1,11 @@
+# ahmedkhd_sylius_paymob_plugin_capture:
+#     path: /payment/paymob/capture
+#     methods: [GET]
+#     defaults:
+#         _controller: Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController::doAction
+
+# ahmedkhd_sylius_paymob_plugin_webhook:
+#     path: /payment/paymob/webhook
+#     methods: [POST]
+#     defaults:
+#         _controller: Ahmedkhd\SyliusPaymobPlugin\Controller\NotifyController::webhookAction

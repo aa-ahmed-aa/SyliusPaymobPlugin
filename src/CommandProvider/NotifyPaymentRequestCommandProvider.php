@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Ahmedkhd\SyliusPaymobPlugin\CommandProvider;
 
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
-use Ahmedkhd\SyliusPaymobPlugin\Command\StatusPaymentRequest;
+use Ahmedkhd\SyliusPaymobPlugin\Command\NotifyPaymentRequest;
 use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-final class StatusPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
+
+final readonly class NotifyPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function __construct(
         private RequestStack $requestStack,
@@ -18,19 +19,18 @@ final class StatusPaymentRequestCommandProvider implements PaymentRequestCommand
 
     public function supports(PaymentRequestInterface $paymentRequest): bool
     {
-        return $paymentRequest->getAction() === PaymentRequestInterface::ACTION_STATUS;
+        return $paymentRequest->getAction() === PaymentRequestInterface::ACTION_NOTIFY;
     }
 
     public function provide(PaymentRequestInterface $paymentRequest): object
     {
         $request = $this->requestStack->getCurrentRequest();
-        $responseData = [];
+        $requestData = [];
 
         if ($request instanceof Request) {
-            // Paymob sends data via GET parameters
-            $requestData = $request->query->all() ?? [];
+            $requestData = $request->getContent();
         }
-
-        return new StatusPaymentRequest($paymentRequest->getId(), $requestData);
+        
+        return new NotifyPaymentRequest($paymentRequest->getId(), json_decode($requestData, true));
     }
 }

@@ -5,10 +5,30 @@ declare(strict_types=1);
 namespace Ahmedkhd\SyliusPaymobPlugin\Service;
 
 use Sylius\Component\Core\Model\PaymentInterface as SyliusPaymentInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface as SyliusPaymentRequestInterface;
 use Ahmedkhd\SyliusPaymobPlugin\Model\PaymobInterface;
+use Sylius\Component\Order\Model\OrderInterface;
 
 interface PaymobServiceInterface
 {
+    /**
+     * Static headers for Paymob requests
+     */
+    public const HEADERS = [
+        'Accept'     => '*/*',
+        'Content-Type' => 'application/json'
+    ];
+
+    /**
+     * Static for Paymob
+     */
+    public const TRANSACTION_TYPE = 'TRANSACTION';
+
+    /**
+     * Static gateway name for Paymob
+     */
+    public const GATEWAY_NAME = 'paymob';
+
     /**
      * Set the Paymob configuration
      *
@@ -40,7 +60,7 @@ interface PaymobServiceInterface
      * @return string
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function createOrderId(SyliusPaymentInterface $payment, string $token): string;
+    public function createOrderId(SyliusPaymentRequestInterface $paymentRequest, string $token): string;
 
     /**
      * Get the iFrame token from Paymob
@@ -51,13 +71,5 @@ interface PaymobServiceInterface
      * @return string
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getPaymentKey(SyliusPaymentInterface $payment, string $token, string $orderId): string;
-
-    /**
-     * Redirect to payment iframe or handle payment redirection logic.
-     *
-     * @param string $iframeURL
-     * @return void
-     */
-    public function doPayment(string $iframeURL): void;
+    public function getPaymentKey(SyliusPaymentRequestInterface $paymentRequest, string $token, string $paymobOrderId): string;
 }

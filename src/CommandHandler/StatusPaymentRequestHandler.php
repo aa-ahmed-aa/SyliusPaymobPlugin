@@ -9,48 +9,64 @@ use Ahmedkhd\SyliusPaymobPlugin\Command\StatusPaymentRequest;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Ahmedkhd\SyliusPaymobPlugin\Service\PaymobServiceInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Sylius\Component\Core\Model\PaymentInterface;
+use \Exception;
 
-
-#[AsMessageHandler]
 final class StatusPaymentRequestHandler
 {
     public function __construct(
         private PaymobServiceInterface $paymobService,
         private PaymentRequestProviderInterface $paymentRequestProvider,
         private StateMachineInterface $stateMachine,
-    ) {
-    }
+    ) { }
 
     public function __invoke(StatusPaymentRequest $statusPaymentRequest): void
     {
         $paymentRequest = $this->paymentRequestProvider->provide($statusPaymentRequest);
+        $requestData = $statusPaymentRequest->getRequestData();
+
+        $paymentRequest->setPayload($requestData);
+
         $payment = $paymentRequest->getPayment();
-        
-        // Get payment details to check status
-        $details = $payment->getDetails();
-        
-        // For now, we'll just check if the payment has been processed
-        // In a real implementation, you would call Paymob API to check the actual status
-        if (isset($details['status']) && $details['status'] === 'success') {
-            $this->stateMachine->apply(
+        assert($payment !== null, 'PaymentRequest must have a payment associated.');
+        assert($payment instanceof PaymentInterface);
+
+        $gatewayConfig = $paymentRequest->getPayment()->getMethod()?->getGatewayConfig()?->getConfig();
+        if ($gatewayConfig === null) {
+            throw new Exception(
+                'payment method configuration is missing',
+            );
+        }
+
+        if(
+            $requestData['success'] === "true" && 
+            isset($requestData["txn_response_code"]) &&
+            $requestData["txn_response_code"] === "APPROVED"
+        ) {
+            if ($this->stateMachine->can(
                 $paymentRequest,
-                PaymentRequestTransitions::GRAPH, 
+                PaymentRequestTransitions::GRAPH,
                 PaymentRequestTransitions::TRANSITION_COMPLETE,
-            );
-        } elseif (isset($details['status']) && $details['status'] === 'failed') {
-            $this->stateMachine->apply(
-                $paymentRequest,
-                PaymentRequestTransitions::GRAPH, 
-                PaymentRequestTransitions::TRANSITION_FAIL,
-            );
+            )) {
+                $this->stateMachine->apply(
+                    $paymentRequest,
+                    PaymentRequestTransitions::GRAPH,
+                    PaymentRequestTransitions::TRANSITION_COMPLETE,
+                );
+            }
+            // payment should be marked done from the webhook call not by the redirect
         } else {
-            // Payment is still pending
-            $this->stateMachine->apply(
-                $paymentRequest, 
-                PaymentRequestTransitions::GRAPH, 
-                PaymentRequestTransitions::TRANSITION_PROCESS,
-            );
+            if ($this->stateMachine->can(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_FAIL,
+            )) {
+                $this->stateMachine->apply(
+                    $paymentRequest,
+                    PaymentRequestTransitions::GRAPH,
+                    PaymentRequestTransitions::TRANSITION_FAIL,
+                );
+            }
         }
     }
 }

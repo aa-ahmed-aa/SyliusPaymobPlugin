@@ -7,14 +7,16 @@ namespace Ahmedkhd\SyliusPaymobPlugin\Command;
 use Sylius\Bundle\PaymentBundle\Command\PaymentRequestHashAwareInterface;
 use Sylius\Bundle\PaymentBundle\Command\PaymentRequestHashAwareTrait;
 
-final class StatusPaymentRequest implements PaymentRequestHashAwareInterface
+class NotifyPaymentRequest implements PaymentRequestHashAwareInterface
 {
     use PaymentRequestHashAwareTrait;
 
     public function __construct(
-        protected ?string $hash,
-        protected readonly array $requestData = [],
-    ) {}
+        ?string $hash,
+        private readonly array $requestData = [],
+    ) {
+        $this->hash = $hash;
+    }
 
     public function getRequestData(): array
     {

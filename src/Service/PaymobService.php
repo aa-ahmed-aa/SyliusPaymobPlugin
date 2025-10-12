@@ -7,42 +7,32 @@ namespace Ahmedkhd\SyliusPaymobPlugin\Service;
 use GuzzleHttp\Client as GuzzleClient;
 use Payum\Core\Exception\UnsupportedApiException;
 use Sylius\Component\Core\Model\PaymentInterface as SyliusPaymentInterface;
-use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Core\Repository\CustomerRepositoryInterface;
 use Ahmedkhd\SyliusPaymobPlugin\Model\PaymobInterface;
 use Ahmedkhd\SyliusPaymobPlugin\Model\Paymob;
 use Ahmedkhd\SyliusPaymobPlugin\Service\PaymobServiceInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface as SyliusPaymentRequestInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 
 
 final class PaymobService implements PaymobServiceInterface
 {
-
-    public static $HEADERS = [
-        'Accept'     => '*/*',
-        'Content-Type' => 'application/json'
-    ];
-
     /** @var PaymobInterface */
     public PaymobInterface $paymobConfig;
 
     /** @var GuzzleClient */
     public GuzzleClient $client;
 
-    /** @var OrderRepositoryInterface */
-    private OrderRepositoryInterface $orderRepository;
-
-    /** @var CustomerRepositoryInterface */
-    private CustomerRepositoryInterface $customerRepository;
-
     public function __construct(
-        OrderRepositoryInterface $orderRepository,
-        CustomerRepositoryInterface $customerRepository
+        private OrderRepositoryInterface $orderRepository,
+        private CustomerRepositoryInterface $customerRepository,
+        private RouterInterface $router,
     ) {
-        $this->orderRepository = $orderRepository;
-        $this->customerRepository = $customerRepository;
         $this->client = new GuzzleClient([
             'base_uri' => 'https://accept.paymobsolutions.com',
-            'headers' => self::$HEADERS
+            'headers' => PaymobServiceInterface::HEADERS
         ]);
     }
     
@@ -93,18 +83,14 @@ final class PaymobService implements PaymobServiceInterface
      * @return string
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-        public function createOrderId(SyliusPaymentInterface $payment, string $token): string
+    public function createOrderId(SyliusPaymentRequestInterface $paymentRequest, string $token): string
     {
         if ($this->client === null) {
             throw new UnsupportedApiException('Client not set. Expected an instance of ' . GuzzleClient::class);
         }
 
-        // Debug payment data - CREATE ORDER ID METHOD
-        error_log("Payment ID: " . $payment->getId());
-        error_log("Payment Order ID: " . $payment->getOrder()->getId());
-        
         // Find the order with all necessary associations loaded
-        $order = $this->orderRepository->findOneById(["id" => $payment->getOrder()->getId()]);
+        $order = $this->orderRepository->findOneBy(["id" => $paymentRequest->getPayment()->getOrder()->getId()]);
         // Get customer directly from customer repository - CREATE ORDER ID METHOD
         $customer = null;
         if ($order->getCustomer()) {
@@ -125,15 +111,14 @@ final class PaymobService implements PaymobServiceInterface
         $city = $billingAddress && $billingAddress->getCity() ? $billingAddress->getCity() : "NA";
         $country = $billingAddress && $billingAddress->getCountryCode() ? $billingAddress->getCountryCode() : "NA";
         $state = $billingAddress && $billingAddress->getProvinceName() ? $billingAddress->getProvinceName() : "NA";
-       
         $response = $this->client->post('/api/ecommerce/orders', [
             'json' => [
                 'auth_token' => $token,
                 'delivery_needed' => 'false',
-                'amount_cents' => (string) $order->getTotal(),
+                'amount_cents' => $order->getTotal(),
                 'currency' => "EGP",
-                'merchant_id' => (string) $this->getPaymobConfig()->getMerchantId(),
-                'merchant_order_id' => (string) $payment->getId(),
+                'merchant_id' => $this->getPaymobConfig()->getMerchantId(),
+                'merchant_order_id' => $order->getNumber(),
                 "shipping_data"=> [
                     "apartment"=> "NA",
                     'email'  => $email,
@@ -157,31 +142,27 @@ final class PaymobService implements PaymobServiceInterface
     }
 
     /**
-     * Get the iFrame token from Paymob
+     * Get the Payment Key from Paymob
+     *
+     * @param SyliusPaymentRequestInterface $paymentRequest
+     * @param string $token
+     * @param string $paymobOrderId
+     * @return string
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getPaymentKey(SyliusPaymentInterface $payment, string $token, string $orderId): string
+    public function getPaymentKey(SyliusPaymentRequestInterface $paymentRequest, string $token, string $paymobOrderId): string
     {
         if ($this->client === null) {
             throw new UnsupportedApiException('Client not set. Expected an instance of ' . GuzzleClient::class);
         }
 
         // Find the order with all necessary associations loaded
-        $order = $this->orderRepository->createQueryBuilder('o')
-            ->leftJoin('o.customer', 'c')
-            ->leftJoin('o.billingAddress', 'ba')
-            ->leftJoin('o.shipments', 's')
-            ->leftJoin('s.method', 'sm')
-            ->addSelect('c', 'ba', 's', 'sm')
-            ->where('o.id = :orderId')
-            ->setParameter('orderId', $payment->getOrder()->getId())
-            ->getQuery()
-            ->getSingleResult();
+        $order = $this->orderRepository->findOneBy(["id" => $paymentRequest->getPayment()->getOrder()->getId()]);
         
         // Get customer directly from customer repository - GET PAYMENT KEY METHOD
         $customer = null;
         if ($order->getCustomer()) {
             $customer = $this->customerRepository->findOneBy(['id' => $order->getCustomer()->getId()]);
-            error_log("Customer found by ID in getPaymentKey: " . ($customer ? "yes" : "no"));
         }
         $billingAddress = $order->getBillingAddress();
 
@@ -207,23 +188,26 @@ final class PaymobService implements PaymobServiceInterface
                 $shippingMethod = $firstShipment->getMethod()->getName() ?: "NA";
             }
         }
-
-        // Get the current domain for callback URLs
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $baseUrl = "{$protocol}://{$host}";
         
         $response = $this->client->post('/api/acceptance/payment_keys', [
             'json' => [
                 'auth_token' => $token,
                 'amount_cents' => (string) $order->getTotal(),
                 'expiration' => '3600',
-                'order_id' => $orderId,
+                'order_id' => $paymobOrderId,
                 'currency' => "EGP",
                 'merchant_id' => (string) $this->getPaymobConfig()->getMerchantId(),
                 'integration_id' => (string) $this->getPaymobConfig()->getIntegrationId(),
-                'success_url' => "{$baseUrl}/payment/paymob/capture?success=true&order={$orderId}",
-                'failure_url' => "{$baseUrl}/payment/paymob/capture?success=false&order={$orderId}",
+                'redirection_url' => $this->router->generate(
+                    'sylius_shop_order_after_pay',
+                    ['hash' => $paymentRequest->getHash()->toBase58()],
+                    UrlGeneratorInterface::ABSOLUTE_URL,
+                ),
+                "notification_url" => $this->router->generate(
+                    'sylius_payment_method_notify',
+                    ['code' => 'paymob'],
+                    UrlGeneratorInterface::ABSOLUTE_URL,
+                ),
                 'billing_data' => [
                     'first_name' => $firstName,
                     'last_name'  => $lastName,
@@ -247,10 +231,15 @@ final class PaymobService implements PaymobServiceInterface
         return json_decode($body)->token ?? $body;
     }
 
-    public function doPayment(string $iframeURL): void
-    {
-        header("location: {$iframeURL}");
-        exit;
-    }
+    function getCurrentBaseURL(): string {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+            || $_SERVER['SERVER_PORT'] == 443
+            || $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' // behind proxy
+            ? "https://" 
+            : "http://";
 
+        $host = $_SERVER['HTTP_HOST'];
+
+        return $protocol . $host;
+    }
 }

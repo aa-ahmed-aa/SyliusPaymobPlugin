@@ -4,149 +4,96 @@ declare(strict_types=1);
 
 namespace Ahmedkhd\SyliusPaymobPlugin\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Ahmedkhd\SyliusPaymobPlugin\Service\PaymobServiceInterface;
+use Sylius\Component\Order\OrderPaymentStates;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\Routing\Annotation\Route;
-use Sylius\Component\Core\Repository\OrderRepositoryInterface;
-use Sylius\Component\Core\Repository\PaymentRepositoryInterface;
-use Sylius\Abstraction\StateMachine\StateMachineInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Routing\RouterInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface;
 
-class NotifyController extends AbstractController
+class NotifyController
 {
+    /** @var PaymobServiceInterface */
+    private $paymobService;
+
+    /** @var RouterInterface */
+    private $router;
+
     public function __construct(
-        private OrderRepositoryInterface $orderRepository,
-        private PaymentRepositoryInterface $paymentRepository,
-        private StateMachineInterface $stateMachine,
-        private EntityManagerInterface $entityManager
-    ) {}
+        PaymobServiceInterface $paymobService,
+        RouterInterface $router
+    ) {
+        $this->paymobService = $paymobService;
+        $this->router = $router;
+    }
 
     /**
      * Handle Paymob's transaction response callback (GET request)
      * This is called when user returns from Paymob iframe
      */
-    #[Route('/payment/paymob/capture', name: 'ahmedkhd_sylius_paymob_plugin_capture', methods: ['GET'])]
-    public function doAction(Request $request): Response
-    {
-        $success = $request->query->get('success');
-        $orderId = $request->query->get('order');
-        $transactionId = $request->query->get('id');
-        
-        error_log("Paymob capture callback - success: {$success}, order: {$orderId}, transaction: {$transactionId}");
-        
-        if (!$orderId) {
-            return new Response('Order ID not provided', Response::HTTP_BAD_REQUEST);
-        }
-        
-        try {
-            // Find the order
-            $order = $this->orderRepository->find($orderId);
-            if (!$order) {
-                error_log("Order not found: {$orderId}");
-                return new Response('Order not found', Response::HTTP_NOT_FOUND);
-            }
-            
-            // Get the payment
-            $payment = $order->getPayments()->first();
-            if (!$payment) {
-                error_log("Payment not found for order: {$orderId}");
-                return new Response('Payment not found', Response::HTTP_NOT_FOUND);
-            }
-            
-            // Update payment details
-            $details = $payment->getDetails();
-            $details['transaction_id'] = $transactionId;
-            $details['success'] = $success === 'true';
-            $details['capture_callback_received'] = true;
-            $payment->setDetails($details);
-            
-            // Update payment state based on success
-            if ($success === 'true') {
-                $payment->setState('completed');
-                error_log("Payment completed for order: {$orderId}");
-            } else {
-                $payment->setState('failed');
-                error_log("Payment failed for order: {$orderId}");
-            }
-            
-            $this->entityManager->flush();
-            
-            // Redirect to success/failure page
-            if ($success === 'true') {
-                return new RedirectResponse('/checkout/complete');
-            } else {
-                return new RedirectResponse('/checkout/failed');
-            }
-            
-        } catch (\Exception $e) {
-            error_log("Error in capture callback: " . $e->getMessage());
-            return new Response('Internal server error', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+    // public function doAction(Request $request): Response
+    // {
+    //     $_GET_PARAMS = $request->query->all();
+
+    //     if(!empty($_GET_PARAMS) && $_GET_PARAMS['success'] == 'true') {
+    //         return new RedirectResponse($this->router->generate('sylius_shop_order_thank_you'));
+    //     }
+
+    //     $order = $this->paymobService->findOrderByOrderNumber($_GET_PARAMS['merchant_order_id']);
+    //     return new RedirectResponse($this->router->generate('sylius_shop_order_show',['tokenValue' => $order->getTokenValue()]));
+    // }
     
-    /**
-     * Handle Paymob's transaction processed webhook (POST request)
-     * This is called by Paymob server to notify about payment status
-     */
-    #[Route('/payment/paymob/webhook', name: 'ahmedkhd_sylius_paymob_plugin_webhook', methods: ['POST'])]
-    public function webhookAction(Request $request): Response
-    {
-        $content = $request->getContent();
-        $data = json_decode($content, true);
-        
-        error_log("Paymob webhook received: " . json_encode($data));
-        
-        if (!$data) {
-            return new Response('Invalid JSON', Response::HTTP_BAD_REQUEST);
-        }
-        
-        $orderId = $data['order']['id'] ?? null;
-        $success = $data['success'] ?? false;
-        $transactionId = $data['id'] ?? null;
-        
-        if (!$orderId) {
-            return new Response('Order ID not provided', Response::HTTP_BAD_REQUEST);
-        }
-        
-        try {
-            // Find the order
-            $order = $this->orderRepository->find($orderId);
-            if (!$order) {
-                error_log("Order not found in webhook: {$orderId}");
-                return new Response('Order not found', Response::HTTP_NOT_FOUND);
-            }
+    // /**
+    //  * Handle Paymob's transaction processed webhook (POST request)
+    //  * This is called by Paymob server to notify about payment status
+    //  */
+    // public function webhookAction(Request $request): Response
+    // {
+    //     $paymobResponse = \GuzzleHttp\json_decode($request->getContent());
+    //     $response = false;
+
+    //     //success payment
+    //     if(
+    //         !empty($paymobResponse) &&
+    //         isset($paymobResponse->obj->is_standalone_payment) &&
+    //         isset($paymobResponse->obj->success) && $paymobResponse->obj->success &&
+    //         isset($paymobResponse->type) && $paymobResponse->type == PaymobServiceInterface::TRANSACTION_TYPE &&
+    //         isset($paymobResponse->obj->order->paid_amount_cents) &&
+    //         isset($paymobResponse->obj->order->merchant_order_id)
+    //     ) {
+    //         $order = $this->paymobService->getOrderByOrderNumber($paymobResponse->obj->order->merchant_order_id);
+    //         $paymentRequest = $order->getPayments()->last()->getPaymentRequests()->last();
             
-            // Get the payment
-            $payment = $order->getPayments()->first();
-            if (!$payment) {
-                error_log("Payment not found for order in webhook: {$orderId}");
-                return new Response('Payment not found', Response::HTTP_NOT_FOUND);
-            }
-            
-            // Update payment details
-            $details = $payment->getDetails();
-            $details['webhook_received'] = true;
-            $details['webhook_data'] = $data;
-            $payment->setDetails($details);
-            
-            // Update payment state based on webhook data
-            if ($success) {
-                $payment->setState('completed');
-                error_log("Payment completed via webhook for order: {$orderId}");
-            } else {
-                $payment->setState('failed');
-                error_log("Payment failed via webhook for order: {$orderId}");
-            }
-            
-            $this->entityManager->flush();
-            
-            return new Response('OK', Response::HTTP_OK);
-            
-        } catch (\Exception $e) {
-            error_log("Error in webhook: " . $e->getMessage());
-            return new Response('Internal server error', Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+    //         $orderAmount = $paymobResponse->obj->order->paid_amount_cents;
+    //         $amount = $paymentRequest->getAmount();
+
+    //         if($orderAmount === $amount) {
+    //             $paymentRequest->setPayload(['status'=> 'success', 'message' => "amount: {$amount}"]);
+    //             $paymentRequest->setResponseData($paymobResponse);
+    //             $this->paymobService->setPaymentRequestState($paymentRequest,
+    //                 PaymentRequestInterface::STATE_COMPLETED,
+    //                 OrderPaymentStates::STATE_PAID
+    //             );
+    //             $response = true;
+    //         }
+    //     } else if (isset($paymobResponse->obj->order->merchant_order_id)) {
+    //         $paymentId = $paymobResponse->obj->order->merchant_order_id;
+    //         $paymentRequest = $this->paymobService->getPaymentRequestById($paymentId);
+    //         $paymentRequest->setPayload(["status"=> "failed", "message"=> "payment_id: {$paymentId}"]);
+    //         $paymentRequest->setResponseData($paymobResponse);
+
+    //         # create new payment so user can try to pay again
+    //         $newPaymentRequest = clone $paymentRequest;
+    //         $newPaymentRequest->setState(PaymentRequestInterface::STATE_NEW);
+    //         $paymentRequest->getOrder()->addPaymentRequest($newPaymentRequest);
+
+    //         $this->paymobService->setPaymentRequestState($paymentRequest,
+    //             PaymentRequestInterface::STATE_FAILED,
+    //             OrderPaymentStates::STATE_AWAITING_PAYMENT
+    //         );
+    //     }
+
+    //     return new Response(\GuzzleHttp\json_encode(['success' => $response]), $response ? 200 : 400);
+    // }
 }
