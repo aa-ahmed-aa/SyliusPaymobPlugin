@@ -22,13 +22,6 @@ return [
 ];
 ```
 
-Add routing to your `config/routes/sylius_shop.yaml`
-
-```yaml
-ahmedkhd_sylius_paymob_plugin_notify_url:
-    resource: "@AhmedkhdSyliusPaymobPlugin/config/routes/shop.yaml"
-```
-
 Add config to your `config/packages/_sylius.yaml`
 
 ```yml
