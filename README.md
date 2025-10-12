@@ -40,7 +40,7 @@ imports:
 ### On Paymob
 under `payment integrations` tab click edit on you environment and add these urls
 ##### Transaction processed callback
-https://{domain_name}/payment/notify/paymob
+https://{domain_name}/payment-methods/paymob
 
 ##### Transaction response callback
-https://{domain_name}/payment/capture/paymob
+https://{domain_name}/payment-methods/paymob
